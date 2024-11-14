@@ -1,0 +1,36 @@
+{
+    "did": "did:plc:FOO",
+    "didDoc": {
+        "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/multikey/v1",
+            "https://w3id.org/security/suites/secp256k1-2019/v1"
+        ],
+        "id": "did:plc:FOO",
+        "alsoKnownAs": [
+            "at://FIZZ"
+        ],
+        "verificationMethod": [
+            {
+                "id": "did:plc:FOO#atproto",
+                "type": "Multikey",
+                "controller": "did:plc:FOO",
+                "publicKeyMultibase": "BAR"
+            }
+        ],
+        "service": [
+            {
+                "id": "#atproto_pds",
+                "type": "AtprotoPersonalDataServer",
+                "serviceEndpoint": "https://cremini.us-west.host.bsky.network"
+            }
+        ]
+    },
+    "handle": "FIZZ",
+    "email": "WIZZ",
+    "emailConfirmed": true,
+    "emailAuthFactor": false,
+    "accessJwt": "FUZZ",
+    "refreshJwt": "BUZZ",
+    "active": true
+}

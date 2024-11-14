@@ -1,0 +1,8 @@
+{
+    "repo": "HANDLE",
+    "collection": "app.bsky.feed.post",
+    "record": {
+        "text": "Hello world! I posted this via the API.",
+        "createdAt": "2024-11-14T18:42:30Z"
+    }
+}
