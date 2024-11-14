@@ -6,21 +6,14 @@ using System.Text.Json;
 
 namespace Qonq.BlueSky
 {
-    public class BlueSkyClient
+    public class BlueSkyClient(string pdsHost)
     {
-        private readonly string _pdsHost;
         private string _blueSkyHandle;
         private string _accessJwt;
         private string _did;
 
-        public BlueSkyClient(string pdsHost)
+        public async Task<DidResponse> GetDid(string handle)
         {
-            _pdsHost = pdsHost;
-        }
-
-        public async Task<string> GetDid(string handle)
-        {
-            string didUrl = null;
             var baseUrl = "https://bsky.social/xrpc/com.atproto.identity.resolveHandle";
             using (var httpClient = new HttpClient())
             {
@@ -28,25 +21,26 @@ namespace Qonq.BlueSky
                 string url = $"{baseUrl}?handle={Uri.EscapeDataString(handle)}";
 
                 // Send a GET request
-                HttpResponseMessage response = await httpClient.GetAsync(url);
+                HttpResponseMessage httpResponse = await httpClient.GetAsync(url);
 
                 // Ensure the response is successful
-                response.EnsureSuccessStatusCode();
+                httpResponse.EnsureSuccessStatusCode();
 
                 // Parse the response content
-                string responseContent = await response.Content.ReadAsStringAsync();
-
+                string responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(responseContent))
+                {
+                    throw new InvalidOperationException("Response content is null or empty.");
+                }
                 // Deserialize JSON and extract the DID
-                var jsonResponse = JsonSerializer.Deserialize<DidResponse>(responseContent);
-                didUrl = jsonResponse.Did;
+                var response = JsonSerializer.Deserialize<DidResponse>(responseContent) ;
+                return response ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
             }
-            return didUrl;
         }
 
         public async Task<CreateSessionResponse> CreateSession(CreateSessionRequest request)
         {
-            CreateSessionResponse response = null;
-            string url = $"{_pdsHost}/xrpc/com.atproto.server.createSession";
+            string url = $"{pdsHost}/xrpc/com.atproto.server.createSession";
 
             string jsonPayload = JsonSerializer.Serialize(request);
 
@@ -59,19 +53,27 @@ namespace Qonq.BlueSky
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     string responseContent = await httpResponse.Content.ReadAsStringAsync();
-                    response = JsonSerializer.Deserialize<CreateSessionResponse>(responseContent);
-
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        throw new InvalidOperationException("Response content is null or empty.");
+                    }
+                    var response = JsonSerializer.Deserialize<CreateSessionResponse>(responseContent);
+                    if(response == null)
+                    {
+                        throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+                    }
                     _accessJwt = response.AccessJwt;
                     _blueSkyHandle = response.Handle;
                     _did = response.Did;
+
+                    return response;
                 }
                 else
                 {
                     var responseContent = await httpResponse.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Error: {httpResponse.StatusCode}, {responseContent}");
+                    throw new InvalidOperationException("API Request Failed");
                 }
             }
-            return response;
         }
 
         public async Task<CreateRecordResponse> CreatePost(string text)
@@ -81,8 +83,7 @@ namespace Qonq.BlueSky
             if (_blueSkyHandle == null)
                 throw new InvalidOperationException("Must have a valid Handle");
 
-            CreateRecordResponse response = null;
-            string url = $"{_pdsHost}/xrpc/com.atproto.repo.createRecord";
+            string url = $"{pdsHost}/xrpc/com.atproto.repo.createRecord";
 
             var createRecordRequest = new CreateRecordRequest
             {
@@ -110,15 +111,18 @@ namespace Qonq.BlueSky
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     var responseContent = await httpResponse.Content.ReadAsStringAsync();
-                    response = JsonSerializer.Deserialize<CreateRecordResponse>(responseContent);
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        throw new InvalidOperationException("Response content is null or empty.");
+                    }
+                    var result = JsonSerializer.Deserialize<CreateRecordResponse>(responseContent);
+                    return result ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
                 }
                 else
                 {
                     var responseContent = await httpResponse.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Error: {httpResponse.StatusCode}, {responseContent}");
+                    throw new InvalidOperationException("API Request Failed");
                 }
-
-                return response;
             }
         }
     }
