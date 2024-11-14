@@ -30,4 +30,11 @@ jobs:
         env:
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-        run: dotnet test src/Qonq.BlueSky.Tests/BlueSky.Tests.csproj --logger "trx"
+        run: dotnet test src/Qonq.BlueSky.Tests/BlueSky.Tests.csproj --logger "trx;LogFileName=TestResults.trx"
+
+      # Step 5: Upload test results
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: src/Qonq.BlueSky.Tests/TestResults/TestResults.trx
