@@ -43,6 +43,7 @@ namespace Qonq.BlueSky.Tests
             Assert.NotEmpty(sessionResponse.AccessJwt);
         }
 
+        [Fact]
         public async Task PostSomething()
         {
             var pdsHost = "https://bsky.social";
