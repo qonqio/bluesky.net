@@ -1,0 +1,37 @@
+name: Publish Nuget
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up .NET
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x' # Adjust to match your target .NET version
+
+      # Step 3: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Qonq.BlueSky.Tests/BlueSky.Tests.csproj
+
+      - name: Build project
+        run: dotnet build src/Qonq.BlueSky/BlueSky.csproj --configuration Release --no-restore
+
+      - name: Pack NuGet package
+        run: dotnet pack src/Qonq.BlueSky/BlueSky.csproj --configuration Release --no-build -o ./nupkgs
+
+      - name: Publish NuGet package
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "./nupkgs/*.nupkg" \
+            --api-key $NUGET_API_KEY \
+            --source https://api.nuget.org/v3/index.json
