@@ -12,7 +12,7 @@ namespace Qonq.BlueSky.Tests
             var pdsHost = "https://bsky.social";
             var blueSkyClient = new BlueSkyClient(pdsHost);
 
-            var handle = "";
+            var handle = Environment.GetEnvironmentVariable("BLUESKY_HANDLE");
 
             var didUrl = await blueSkyClient.GetDid(handle);
 
@@ -22,15 +22,39 @@ namespace Qonq.BlueSky.Tests
         }
 
         [Fact]
-        public async Task Test1()
+        public async Task StartSession()
         {
             var pdsHost = "https://bsky.social";
             var blueSkyClient = new BlueSkyClient(pdsHost);
 
+            var handle = Environment.GetEnvironmentVariable("BLUESKY_HANDLE");
+            var password = Environment.GetEnvironmentVariable("BLUESKY_PASSWORD");
+
             var sessionRequest = new CreateSessionRequest()
             {
-                Identifier = "",
-                Password = ""
+                Identifier = handle,
+                Password = password
+            };
+
+            var sessionResponse = await blueSkyClient.CreateSession(sessionRequest);
+
+            Assert.NotNull(sessionResponse);
+            Assert.NotNull(sessionResponse.AccessJwt);
+            Assert.NotEmpty(sessionResponse.AccessJwt);
+        }
+
+        public async Task PostSomething()
+        {
+            var pdsHost = "https://bsky.social";
+            var blueSkyClient = new BlueSkyClient(pdsHost);
+
+            var handle = Environment.GetEnvironmentVariable("BLUESKY_HANDLE");
+            var password = Environment.GetEnvironmentVariable("BLUESKY_PASSWORD");
+
+            var sessionRequest = new CreateSessionRequest()
+            {
+                Identifier = handle,
+                Password = password
             };
 
             var sessionResponse = await blueSkyClient.CreateSession(sessionRequest);
