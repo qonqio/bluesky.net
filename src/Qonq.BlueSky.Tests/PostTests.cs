@@ -27,7 +27,7 @@ namespace Qonq.BlueSky.Tests
         [Fact]
         public async Task GetDid()
         {
-            var didResponse = await _client.GetDid(_handle);
+            var didResponse = await _client.GetDidAsync(_handle);
 
             Assert.NotNull(didResponse);
             Assert.NotNull(didResponse.Did);
@@ -44,7 +44,7 @@ namespace Qonq.BlueSky.Tests
                 Password = _password
             };
 
-            var sessionResponse = await _client.CreateSession(sessionRequest);
+            var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
 
             Assert.NotNull(sessionResponse);
             Assert.NotNull(sessionResponse.AccessJwt);
@@ -60,7 +60,7 @@ namespace Qonq.BlueSky.Tests
                 Password = _password
             };
 
-            var sessionResponse = await _client.CreateSession(sessionRequest);
+            var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
 
             Assert.NotNull(sessionResponse);
             Assert.NotNull(sessionResponse.AccessJwt);
@@ -68,7 +68,7 @@ namespace Qonq.BlueSky.Tests
 
             var text = "Beep, Beep, Boop!";
 
-            var postResponse = await _client.CreatePost(text);
+            var postResponse = await _client.CreatePostAsync(text);
 
             Assert.NotNull(postResponse);
 

@@ -1,6 +1,4 @@
 ﻿using Qonq.BlueSky.Model;
-using System.Reflection.Metadata;
-using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Text.Json;
 
@@ -12,7 +10,7 @@ namespace Qonq.BlueSky
         private string _accessJwt;
         private string _did;
 
-        public async Task<DidResponse> GetDid(string handle)
+        public async Task<DidResponse> GetDidAsync(string handle)
         {
             var baseUrl = $"{pdsHost}/xrpc/com.atproto.identity.resolveHandle";
             using (var httpClient = new HttpClient())
@@ -38,7 +36,7 @@ namespace Qonq.BlueSky
             }
         }
 
-        public async Task<CreateSessionResponse> CreateSession(CreateSessionRequest request)
+        public async Task<CreateSessionResponse> CreateSessionAsync(CreateSessionRequest request)
         {
             string url = $"{pdsHost}/xrpc/com.atproto.server.createSession";
 
@@ -76,7 +74,7 @@ namespace Qonq.BlueSky
             }
         }
 
-        public async Task<CreateRecordResponse> CreatePost(string text)
+        public async Task<CreateRecordResponse> CreatePostAsync(string text)
         {
             if (_accessJwt == null)
                 throw new InvalidOperationException("Must have a valid JWT token");

@@ -46,11 +46,11 @@ var client = new BlueSkyClient(PdsHost);
 ---
 
 ### **2. Retrieving a DID**
-The DID (Decentralized Identifier) is unique for your BlueSky account. Use the `GetDid` method to fetch it:
+The DID (Decentralized Identifier) is unique for your BlueSky account. Use the `GetDidAsync` method to fetch it:
 ```csharp
 using Qonq.BlueSky.Model;
 
-var didResponse = await client.GetDid("your-handle");
+var didResponse = await client.GetDidAsync("your-handle");
 Console.WriteLine($"Your DID: {didResponse.Did}");
 ```
 
@@ -62,7 +62,7 @@ Your DID: 1234567890abcdef1234567890abcdef
 ---
 
 ### **3. Starting a Session**
-To authenticate and start a session, use the `CreateSession` method with your handle and password:
+To authenticate and start a session, use the `CreateSessionAsync` method with your handle and password:
 ```csharp
 var sessionRequest = new CreateSessionRequest
 {
@@ -70,7 +70,7 @@ var sessionRequest = new CreateSessionRequest
     Password = "your-password"
 };
 
-var sessionResponse = await client.CreateSession(sessionRequest);
+var sessionResponse = await client.CreateSessionAsync(sessionRequest);
 
 Console.WriteLine($"Access Token: {sessionResponse.AccessJwt}");
 ```
@@ -81,11 +81,11 @@ Console.WriteLine($"Access Token: {sessionResponse.AccessJwt}");
 ---
 
 ### **4. Posting Content**
-Once authenticated, you can post text content using the `CreatePost` method:
+Once authenticated, you can post text content using the `CreatePostAsync` method:
 ```csharp
-var postContent = "Hello, BlueSky!";
+var postContent = "Beep, Beep, Boop! I'm a BlueSky.NET Bot!";
 
-var postResponse = await client.CreatePost(postContent);
+var postResponse = await client.CreatePostAsync(postContent);
 
 Console.WriteLine($"Post URI: {postResponse.Uri}");
 Console.WriteLine($"Post CID: {postResponse.Cid}");
