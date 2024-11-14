@@ -1,5 +1,3 @@
-# bluesky.net
-.NET SDK for BlueSky
 # BlueSky.NET Library Documentation
 
 This document provides an overview of how to use the `BlueSky.NET` library for interacting with the BlueSky API. The examples provided demonstrate essential operations such as retrieving a DID, creating a session, and posting content.
