@@ -14,7 +14,7 @@ namespace Qonq.BlueSky
 
         public async Task<DidResponse> GetDid(string handle)
         {
-            var baseUrl = "https://bsky.social/xrpc/com.atproto.identity.resolveHandle";
+            var baseUrl = $"{pdsHost}/xrpc/com.atproto.identity.resolveHandle";
             using (var httpClient = new HttpClient())
             {
                 // Construct the query URL
