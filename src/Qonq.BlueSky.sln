@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlueSky.Tests", "Qonq.BlueSky.Tests\BlueSky.Tests.csproj", "{28E40EC8-AC13-4F75-A892-275B86FC1847}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlueSky.Tests", "Qonq.BlueSky.Tests\Qonq.BlueSky.Tests.csproj", "{28E40EC8-AC13-4F75-A892-275B86FC1847}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qonq.BlueSky", "Qonq.BlueSky\Qonq.BlueSky.csproj", "{B318A270-6FF8-49CB-A601-F48C9F5FD5E3}"
 EndProject

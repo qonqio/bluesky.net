@@ -23,14 +23,14 @@ jobs:
 
       # Step 3: Restore dependencies
       - name: Restore dependencies
-        run: dotnet restore src/Qonq.BlueSky.Tests/BlueSky.Tests.csproj
+        run: dotnet restore src/Qonq.BlueSky.Tests/Qonq.BlueSky.Tests.csproj
 
       # Step 4: Run tests
       - name: Run Unit Tests
         env:
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-        run: dotnet test src/Qonq.BlueSky.Tests/BlueSky.Tests.csproj --logger "trx;LogFileName=TestResults.trx"
+        run: dotnet test src/Qonq.BlueSky.Tests/Qonq.BlueSky.Tests.csproj --logger "trx;LogFileName=TestResults.trx"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v3
