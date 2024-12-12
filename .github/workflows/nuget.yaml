@@ -26,9 +26,12 @@ jobs:
         run: dotnet build src/Qonq.BlueSky/Qonq.BlueSky.csproj --configuration Release --no-restore
 
       - name: Pack NuGet package
+        with:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           echo "Generating build number..."
           BUILD_NUMBER=$(date +%Y.%m.%d).${{ github.run_number }}
           echo "Build number: $BUILD_NUMBER"
 
           dotnet pack src/Qonq.BlueSky/Qonq.BlueSky.csproj --configuration Release --no-build -o ./nupkgs /property:PackageVersion=$BUILD_NUMBER
+          dotnet nuget push --source 'https://nuget.org' --api-key $NUGET_API_KEY nupkgs/*.nupkg
