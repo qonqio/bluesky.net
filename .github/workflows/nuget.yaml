@@ -20,10 +20,10 @@ jobs:
 
       # Step 3: Restore dependencies
       - name: Restore dependencies
-        run: dotnet restore src/Qonq.BlueSky.Tests/BlueSky.Tests.csproj
+        run: dotnet restore src/Qonq.BlueSky/Qonq.BlueSky.csproj
 
       - name: Build project
-        run: dotnet build src/Qonq.BlueSky/BlueSky.csproj --configuration Release --no-restore
+        run: dotnet build src/Qonq.BlueSky/Qonq.BlueSky.csproj --configuration Release --no-restore
 
       - name: Pack NuGet package
         run: |
@@ -31,4 +31,4 @@ jobs:
           BUILD_NUMBER=$(date +%Y.%m.%d).${{ github.run_number }}
           echo "Build number: $BUILD_NUMBER"
 
-          dotnet pack src/Qonq.BlueSky/BlueSky.csproj --configuration Release --no-build -o ./nupkgs /property:Version=${version}
+          dotnet pack src/Qonq.BlueSky/Qonq.BlueSky.csproj --configuration Release --no-build -o ./nupkgs /property:Version=${version}
