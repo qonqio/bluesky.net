@@ -31,4 +31,4 @@ jobs:
           BUILD_NUMBER=$(date +%Y.%m.%d).${{ github.run_number }}
           echo "Build number: $BUILD_NUMBER"
 
-          dotnet pack src/Qonq.BlueSky/Qonq.BlueSky.csproj --configuration Release --no-build -o ./nupkgs /property:Version=${version}
+          dotnet pack src/Qonq.BlueSky/Qonq.BlueSky.csproj --configuration Release --no-build -o ./nupkgs /property:PackageVersion=$BUILD_NUMBER
