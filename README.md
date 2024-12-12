@@ -107,7 +107,7 @@ Console.WriteLine($"Post CID: {postResponse.Cid}");
 
 Feel free to contribute to the `BlueSky.NET` library by submitting pull requests or reporting issues.
 
-**Repository:** [BlueSky.NET GitHub](https://github.com/Qonq/BlueSky.NET)
+**Repository:** [BlueSky.NET GitHub](https://github.com/qonqio/bluesky.net)
 
 ---
 
