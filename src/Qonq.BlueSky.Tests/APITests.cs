@@ -1,23 +1,29 @@
+using Microsoft.Extensions.Configuration;
 using Qonq.BlueSky.Model;
 namespace Qonq.BlueSky.Tests;
 
 public class APITests
 {
+    private IConfiguration Configuration { get; }
     private const string PdsHost = "https://bsky.social";
     private readonly BlueSkyClient _client;
     private readonly string _handle;
     private readonly string _password;
-    private string _did;
 
     public APITests()
     {
         _client = new BlueSkyClient(PdsHost);
 
-        _handle = Environment.GetEnvironmentVariable("BLUESKY_HANDLE");
+        Configuration = new ConfigurationBuilder()
+            .AddUserSecrets<APITests>()
+            .AddEnvironmentVariables()
+            .Build();
+
+        _handle = Configuration["BLUESKY_HANDLE"];
         if (_handle == null)
             throw new InvalidOperationException("Must specify BlueSky Handle");
 
-        _password = Environment.GetEnvironmentVariable("BLUESKY_PASSWORD");
+        _password = Configuration["BLUESKY_PASSWORD"];
         if (_password == null)
             throw new InvalidOperationException("Must specify BlueSky Password");
     }
@@ -31,7 +37,6 @@ public class APITests
         Assert.NotNull(didResponse.Did);
         Assert.NotEmpty(didResponse.Did);
         Assert.Equal(32, didResponse.Did.Length);
-		_did = didResponse.Did;
 
 	}
 
@@ -88,7 +93,8 @@ public class APITests
 			Password = _password
 		};
 		var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
-		var followers = await _client.GetFollowersAsync(_did);
+        var myDid = sessionResponse.Did;
+        var followers = await _client.GetFollowersAsync(myDid);
 		Assert.NotNull(followers);
 		Assert.NotEmpty(followers);
 	}
@@ -102,13 +108,14 @@ public class APITests
 			Password = _password
 		};
 		var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
-		var following = await _client.GetFollowingAsync(_did);
+        var myDid = sessionResponse.Did;
+        var following = await _client.GetFollowingAsync(myDid);
 		Assert.NotNull(following);
 		Assert.NotEmpty(following);
-	}
+    }
 
     [Fact]
-    public async Task FollowUser()
+    public async Task GetUserByHandle()
     {
         var sessionRequest = new CreateSessionRequest()
         {
@@ -119,6 +126,81 @@ public class APITests
         Assert.NotNull(sessionResponse);
         Assert.NotNull(sessionResponse.AccessJwt);
         Assert.NotEmpty(sessionResponse.AccessJwt);
-        var followResponse = await _client.FollowUserAsync("did:bluesky:z6Mk3ZQ5Q7Qqz");
+        var userProfile = await _client.GetUserAsync("blueskydotnet.bsky.social");
+
+        Assert.NotNull(userProfile);
+    }
+
+    [Fact]
+    public async Task GetUserByDid()
+    {
+        var sessionRequest = new CreateSessionRequest()
+        {
+            Identifier = _handle,
+            Password = _password
+        };
+        var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
+        var myDid = sessionResponse.Did;
+        Assert.NotNull(sessionResponse);
+        Assert.NotNull(sessionResponse.AccessJwt);
+        Assert.NotEmpty(sessionResponse.AccessJwt);
+        var userProfile = await _client.GetUserAsync(myDid);
+
+        Assert.NotNull(userProfile);
+    }
+
+    [Fact]
+    public async Task GetFollowRecords()
+    {
+        var sessionRequest = new CreateSessionRequest()
+        {
+            Identifier = _handle,
+            Password = _password
+        };
+        var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
+        Assert.NotNull(sessionResponse);
+        Assert.NotNull(sessionResponse.AccessJwt);
+        Assert.NotEmpty(sessionResponse.AccessJwt);
+        var followCollectionName = "app.bsky.graph.follow";
+        var allFollowRecords = await _client.GetAllFollowRecordsAsync(followCollectionName);
+        Assert.NotNull(allFollowRecords);
+    }
+
+    [Fact]
+    public async Task FollowUser()
+    {
+        var sessionRequest = new CreateSessionRequest()
+        {
+            Identifier = _handle,
+            Password = _password
+        };
+        var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
+        var userToFollow = await _client.GetUserAsync("realkevinbacon.bsky.social");
+        var userToFollowDid = userToFollow.Did;
+        Assert.NotNull(sessionResponse);
+        Assert.NotNull(sessionResponse.AccessJwt);
+        Assert.NotEmpty(sessionResponse.AccessJwt);
+
+        // Am I following Kevin Bacon?
+        var followCollectionName = "app.bsky.graph.follow";
+        var followBeforeAdd = await _client.GetAllFollowRecordsAsync(followCollectionName);
+        var existenceBeforeAdd = followBeforeAdd.Any(f => f.Value.Subject == userToFollowDid);
+        Assert.False(existenceBeforeAdd); // NO
+
+        // Follow Kevin Bacon
+        var followResponse = await _client.FollowUserAsync(userToFollowDid);
+
+        // Am I following Kevin Bacon?
+        var followAfterAdd = await _client.GetAllFollowRecordsAsync(followCollectionName);
+        var existenceAfterAdd = followAfterAdd.Any(f => f.Value.Subject == userToFollowDid);
+        Assert.True(existenceAfterAdd); // YES
+
+        // UN-Follow Kevin Bacon
+        var unfollowResponse = await _client.UnfollowUserAsync(userToFollowDid);
+
+        // Am I following Kevin Bacon?
+        var followAfterDelete = await _client.GetAllFollowRecordsAsync(followCollectionName);
+        var existenceAfterDelete = followAfterDelete.Any(f => f.Value.Subject == userToFollowDid);
+        Assert.False(existenceAfterDelete); // NO
     }
 }

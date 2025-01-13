@@ -10,6 +10,30 @@ public class BlueSkyClient(string pdsHost)
 	private string _accessJwt;
 	private string _did;
 
+	public async Task<BlueSkyUser> GetUserAsync(string handle)
+    {
+        string result = "";
+
+        if (_accessJwt == null)
+            throw new InvalidOperationException("Must have a valid JWT token");
+        if (_blueSkyHandle == null)
+            throw new InvalidOperationException("Must have a valid Handle");
+
+
+        using (var httpClient = new HttpClient())
+        {
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
+
+            string url = $"{pdsHost}/xrpc/app.bsky.actor.getProfile?actor={handle}";
+
+            var response = await httpClient.GetFromJsonAsync<BlueSkyUser>(url);
+
+			return response;
+        }
+
+        return null;
+    }
+
 	/// <summary>
 	/// Follow a BlueSky User
 	/// </summary>
@@ -29,7 +53,7 @@ public class BlueSkyClient(string pdsHost)
 		{
 			Repo = _did,
 			Collection = "app.bsky.graph.follow",
-			Record = new Record
+			Record = new RecordValue
 			{
 				Subject = userDid,
 				CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -66,13 +90,124 @@ public class BlueSkyClient(string pdsHost)
 		}
 	}
 
-	/// <summary>
-	/// Get the followers of a BlueSky User
-	/// </summary>
-	/// <param name="userDid">ID of the user to get followers from</param>
-	/// <returns>List<BlueSkyUser></returns>
-	/// <exception cref="InvalidOperationException"></exception>
-	public async Task<List<BlueSkyUser>> GetFollowersAsync(string userDid)
+
+    /// <summary>
+    /// Follow a BlueSky User
+    /// </summary>
+    /// <param name="userDid">The ID of the user you want to follow</param>
+    /// <returns>CreateRecordResponse</returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async Task<CreateRecordResponse> UnfollowUserAsync(string userDid)
+    {
+        if (_accessJwt == null)
+            throw new InvalidOperationException("Must have a valid JWT token");
+        if (_blueSkyHandle == null)
+            throw new InvalidOperationException("Must have a valid Handle");
+
+        var followCollectionName = "app.bsky.graph.follow";
+        var allFollowRecords = await GetAllFollowRecordsAsync(followCollectionName);
+        var followRecordToDelete = allFollowRecords.FirstOrDefault(f => f.Value.Subject == userDid);
+
+		if (followRecordToDelete == null)
+			throw new InvalidOperationException("User Not Followed");
+
+        string url = $"{pdsHost}/xrpc/com.atproto.repo.deleteRecord";
+
+        var deleteRecordRequest = new DeleteRecordRequest
+        {
+            Repo = _did,
+            Collection = "app.bsky.graph.follow",
+            RecordKey = followRecordToDelete.Uri.Split('/').Last()
+        };
+
+        string jsonPayload = JsonSerializer.Serialize(deleteRecordRequest, new JsonSerializerOptions
+        {
+            WriteIndented = true // Optional, for pretty printing
+        });
+
+        using (var httpClient = new HttpClient())
+        {
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage httpResponse = await httpClient.PostAsync(url, content);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(responseContent))
+                {
+                    throw new InvalidOperationException("Response content is null or empty.");
+                }
+                var result = JsonSerializer.Deserialize<CreateRecordResponse>(responseContent);
+                return result ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+            }
+            else
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                throw new InvalidOperationException("API Request Failed");
+            }
+        }
+    }
+
+    //
+    public async Task<List<Record>> GetAllFollowRecordsAsync(string collection)
+    {
+        if (_accessJwt == null)
+            throw new InvalidOperationException("Must have a valid JWT token");
+
+        string baseUrl = $"{pdsHost}/xrpc/com.atproto.repo.listRecords";
+        var allRecords = new List<Record>();
+        string? cursor = null;
+
+        using (var httpClient = new HttpClient())
+        {
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
+
+            do
+            {
+                string url = $"{baseUrl}?repo={_did}&collection={collection}";
+                if (!string.IsNullOrEmpty(cursor))
+                {
+                    url += $"&cursor={Uri.EscapeDataString(cursor)}";
+                }
+
+                HttpResponseMessage httpResponse = await httpClient.GetAsync(url);
+
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ListRecordsResponse>(responseContent);
+
+                    if (result != null)
+                    {
+                        allRecords.AddRange(result.Records);
+                        cursor = result.Cursor; // Update cursor for the next iteration
+                    }
+                    else
+                    {
+                        cursor = null; // Stop if no more data
+                    }
+                }
+                else
+                {
+                    var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException($"API Request Failed: {responseContent}");
+                }
+            } while (!string.IsNullOrEmpty(cursor));
+        }
+
+        return allRecords;
+    }
+
+    /// <summary>
+    /// Get the followers of a BlueSky User
+    /// https://docs.bsky.app/docs/api/app-bsky-graph-get-followers
+    /// </summary>
+    /// <param name="userDid">ID of the user to get followers from</param>
+    /// <returns>List<BlueSkyUser></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async Task<List<BlueSkyUser>> GetFollowersAsync(string userDid)
 	{
 		string result = "";
 		var followers = new List<BlueSkyUser>();
@@ -156,6 +291,7 @@ public class BlueSkyClient(string pdsHost)
 
 	/// <summary>
 	/// Get the DID of a BlueSky User from the handle
+	/// https://docs.bsky.app/docs/api/com-atproto-identity-resolve-handle
 	/// </summary>
 	/// <param name="handle">Handle of the user</param>
 	/// <returns>DidResponse</returns>
@@ -249,7 +385,7 @@ public class BlueSkyClient(string pdsHost)
 		{
 			Repo = _did,
 			Collection = "app.bsky.feed.post",
-			Record = new Record
+			Record = new RecordValue
 			{
 				Text = text,
 				CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
