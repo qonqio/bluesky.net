@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
+namespace Qonq.BlueSky.Model;
 
-namespace Qonq.BlueSky.Model
+public class CreateRecordResponse
 {
-    public class CreateRecordResponse
-    {
-        [JsonPropertyName("uri")]
-        public string Uri { get; set; }
-        [JsonPropertyName("cid")]
-        public string Cid { get; set; }
-    }
+    [JsonPropertyName("uri")]
+    public string Uri { get; set; }
+    [JsonPropertyName("cid")]
+    public string Cid { get; set; }
 }
