@@ -9,11 +9,11 @@ namespace Qonq.BlueSky.Model
 {
     public class Record
     {
-        [JsonPropertyName("text")]
-        public string Text { get; set; }
-        [JsonPropertyName("createdAt")]
-        public string CreatedAt { get; set; }
-        [JsonPropertyName("$type")]
-        public string Type { get; set; }
+        [JsonPropertyName("uri")]
+        public string Uri { get; set; }
+        [JsonPropertyName("cid")]
+        public string Cid { get; set; }
+        [JsonPropertyName("value")]
+        public RecordValue Value { get; set; }
     }
 }

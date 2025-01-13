@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
+namespace Qonq.BlueSky.Model;
 
-namespace Qonq.BlueSky.Model
+public class DidResponse
 {
-    public class DidResponse
-    {
-        [JsonPropertyName("did")]
-        public string Did { get; set; }
-    }
+    [JsonPropertyName("did")]
+    public string Did { get; set; }
 }
