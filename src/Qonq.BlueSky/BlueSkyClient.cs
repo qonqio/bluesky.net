@@ -11,6 +11,12 @@ namespace Qonq.BlueSky
 		private string _accessJwt;
 		private string _did;
 
+		/// <summary>
+		/// Get a BlueSky User by handle
+		/// </summary>
+		/// <param name="handle">The @ handle</param>
+		/// <returns></returns>
+		/// <exception cref="InvalidOperationException"></exception>
 		public async Task<BlueSkyUser> GetUserAsync(string handle)
 		{
 			string result = "";
@@ -324,50 +330,6 @@ namespace Qonq.BlueSky
 		}
 
 		/// <summary>
-		/// Create a new session
-		/// </summary>
-		/// <param name="request">CreateSessionRequest</param>
-		/// <returns>CreateSessionResponse</returns>
-		/// <exception cref="InvalidOperationException"></exception>
-		public async Task<CreateSessionResponse> CreateSessionAsync(CreateSessionRequest request)
-		{
-			string url = $"{pdsHost}/xrpc/com.atproto.server.createSession";
-
-			string jsonPayload = JsonSerializer.Serialize(request);
-
-			using (var httpClient = new HttpClient())
-			{
-				var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-				HttpResponseMessage httpResponse = await httpClient.PostAsync(url, content);
-
-				if (httpResponse.IsSuccessStatusCode)
-				{
-					string responseContent = await httpResponse.Content.ReadAsStringAsync();
-					if (string.IsNullOrWhiteSpace(responseContent))
-					{
-						throw new InvalidOperationException("Response content is null or empty.");
-					}
-					var response = JsonSerializer.Deserialize<CreateSessionResponse>(responseContent);
-					if (response == null)
-					{
-						throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
-					}
-					_accessJwt = response.AccessJwt;
-					_blueSkyHandle = response.Handle;
-					_did = response.Did;
-
-					return response;
-				}
-				else
-				{
-					var responseContent = await httpResponse.Content.ReadAsStringAsync();
-					throw new InvalidOperationException("API Request Failed");
-				}
-			}
-		}
-
-		/// <summary>
 		/// Create a new Post
 		/// </summary>
 		/// <param name="text">The text of the post</param>
@@ -414,6 +376,50 @@ namespace Qonq.BlueSky
 					}
 					var result = JsonSerializer.Deserialize<CreateRecordResponse>(responseContent);
 					return result ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+				}
+				else
+				{
+					var responseContent = await httpResponse.Content.ReadAsStringAsync();
+					throw new InvalidOperationException("API Request Failed");
+				}
+			}
+		}
+
+		/// <summary>
+		/// Create a new session
+		/// </summary>
+		/// <param name="request">CreateSessionRequest</param>
+		/// <returns>CreateSessionResponse</returns>
+		/// <exception cref="InvalidOperationException"></exception>
+		public async Task<CreateSessionResponse> CreateSessionAsync(CreateSessionRequest request)
+		{
+			string url = $"{pdsHost}/xrpc/com.atproto.server.createSession";
+
+			string jsonPayload = JsonSerializer.Serialize(request);
+
+			using (var httpClient = new HttpClient())
+			{
+				var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+				HttpResponseMessage httpResponse = await httpClient.PostAsync(url, content);
+
+				if (httpResponse.IsSuccessStatusCode)
+				{
+					string responseContent = await httpResponse.Content.ReadAsStringAsync();
+					if (string.IsNullOrWhiteSpace(responseContent))
+					{
+						throw new InvalidOperationException("Response content is null or empty.");
+					}
+					var response = JsonSerializer.Deserialize<CreateSessionResponse>(responseContent);
+					if (response == null)
+					{
+						throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+					}
+					_accessJwt = response.AccessJwt;
+					_blueSkyHandle = response.Handle;
+					_did = response.Did;
+
+					return response;
 				}
 				else
 				{
