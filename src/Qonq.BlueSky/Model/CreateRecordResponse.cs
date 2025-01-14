@@ -1,10 +1,11 @@
 ﻿using System.Text.Json.Serialization;
-namespace Qonq.BlueSky.Model;
-
-public class CreateRecordResponse
+namespace Qonq.BlueSky.Model
 {
-    [JsonPropertyName("uri")]
-    public string Uri { get; set; }
-    [JsonPropertyName("cid")]
-    public string Cid { get; set; }
+	public class CreateRecordResponse
+	{
+		[JsonPropertyName("uri")]
+		public string Uri { get; set; }
+		[JsonPropertyName("cid")]
+		public string Cid { get; set; }
+	}
 }

@@ -10,16 +10,16 @@ You can follow this project on [@blueskydotnet.bsky.social](https://bsky.app/pro
 
 ### **Installation**
 
-
-**IMPORTANT: I have not yet setup the Nuget Package yet!!!**
-
 1. Add the `Qonq.BlueSky` library to your project:
    ```bash
    dotnet add package Qonq.BlueSky
    ```
 
+> NuGet Package at https://www.nuget.org/packages/Qonq.BlueSky/2025.1.13.6
+
 
 2. Ensure your project has access to .NET Standard or a compatible version.
+3. The Test project is .NET 8
 
 ### **Prerequisites**
 - A valid BlueSky account.

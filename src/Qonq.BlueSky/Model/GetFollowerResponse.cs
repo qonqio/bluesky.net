@@ -1,7 +1,8 @@
-﻿namespace Qonq.BlueSky.Model;
-
-public class GetFollowersResponse
+﻿namespace Qonq.BlueSky.Model
 {
-	public List<BlueSkyUser> Followers { get; set; }
-	public string Cursor { get; set; }
+	public class GetFollowersResponse
+	{
+		public List<BlueSkyUser> Followers { get; set; }
+		public string Cursor { get; set; }
+	}
 }

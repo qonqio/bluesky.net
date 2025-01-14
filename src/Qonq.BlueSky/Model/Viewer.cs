@@ -1,14 +1,15 @@
 ﻿using System.Text.Json.Serialization;
-namespace Qonq.BlueSky.Model;
-
-public class Viewer
+namespace Qonq.BlueSky.Model
 {
-	[JsonPropertyName("muted")]
-	public bool Muted { get; set; }
+	public class Viewer
+	{
+		[JsonPropertyName("muted")]
+		public bool Muted { get; set; }
 
-	[JsonPropertyName("blockedBy")]
-	public bool BlockedBy { get; set; }
+		[JsonPropertyName("blockedBy")]
+		public bool BlockedBy { get; set; }
 
-	[JsonPropertyName("followedBy")]
-	public string FollowedBy { get; set; }
+		[JsonPropertyName("followedBy")]
+		public string FollowedBy { get; set; }
+	}
 }

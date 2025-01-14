@@ -1,10 +1,11 @@
 ﻿using System.Text.Json.Serialization;
-namespace Qonq.BlueSky.Model;
-
-public class ErrorResponse
+namespace Qonq.BlueSky.Model
 {
-    [JsonPropertyName("error")]
-    public string Error { get; set; }
-    [JsonPropertyName("message")]
-    public string Message { get; set; }
+	public class ErrorResponse
+	{
+		[JsonPropertyName("error")]
+		public string Error { get; set; }
+		[JsonPropertyName("message")]
+		public string Message { get; set; }
+	}
 }
