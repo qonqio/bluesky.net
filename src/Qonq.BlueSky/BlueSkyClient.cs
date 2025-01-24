@@ -321,13 +321,27 @@ namespace Qonq.BlueSky
             return response ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
         }
 
-		/// <summary>
-		/// Create a new Post
-		/// </summary>
-		/// <param name="text">The text of the post</param>
-		/// <returns>CreateRecordResponse</returns>
-		/// <exception cref="InvalidOperationException"></exception>
-		public async Task<CreateRecordResponse> CreatePostAsync(string text)
+        /// <summary>
+        /// Create a new Post
+        /// </summary>
+        /// <param name="text">The text of the post</param>
+        /// <returns>CreateRecordResponse</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<CreateRecordResponse> CreatePostAsync(string text)
+		{
+			return	 await CreatePostAsync(text);
+
+        }
+
+        /// <summary>
+        /// Create a new Post with an image
+        /// </summary>
+        /// <param name="text">The text of the post</param>
+        /// <param name="image">Base64 string</param>
+		/// <param name="alt">alt text of image</param>
+        /// <returns>CreateRecordResponse</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<CreateRecordResponse> CreatePostAsync(string text, string? image, string? alt)
 		{
 			if (_accessJwt == null)
 				throw new InvalidOperationException("Must have a valid JWT token");
@@ -340,6 +354,24 @@ namespace Qonq.BlueSky
 			
             var facts =Facets.DetectFacets(utf16);
 
+			UploadBlobResponse imageResponse;
+			Embed embed = new Embed();
+			embed.Images = new List<Image>();
+			embed.Type = "app.bsky.embed.images";
+			
+            if (!string.IsNullOrEmpty(image))
+			{
+				 imageResponse = await UploadBlobAsync(image);
+
+				Image img = new Image
+				{
+					alt = alt != null ? alt : "Image",
+					image = imageResponse.blob,
+					aspectRatio = new AspectRatio { width = 640, height = 480 }
+				};
+                embed.Images.Add(img);
+            }
+
             CreateRecordRequest createRecordRequest = new CreateRecordRequest
 			{
 				Repo = _did,
@@ -349,7 +381,8 @@ namespace Qonq.BlueSky
 					Text = text,
 					CreatedAt = DateTime.UtcNow.toISOstring(),
 					Type = feedPost,
-					Facets = facts
+					Facets = facts,
+					Embed =  embed
 					
                 }
 			};
@@ -422,5 +455,56 @@ namespace Qonq.BlueSky
                 throw new InvalidOperationException("API Request Failed");
             }
         }
-	}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="image">data:image/png;base64,...</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <remarks>
+        ///data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg== 
+        /// </remarks>
+        public async Task<UploadBlobResponse> UploadBlobAsync(string image)
+        {
+            if (_accessJwt == null)
+                throw new InvalidOperationException("Must have a valid JWT token");
+            if (_blueSkyHandle == null)
+                throw new InvalidOperationException("Must have a valid Handle");
+
+            string url = $"{pdsHost}/xrpc/com.atproto.repo.uploadBlob";
+
+
+            BlobConverter blob = new BlobConverter();
+			byte[] binaryData = blob.ConvertDataURIToByteArray(image);
+
+
+            using HttpClient httpClient = new();
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
+            //httpClient.DefaultRequestHeaders.Add("Content-Type", "image/png");
+           
+
+
+            var content = new ByteArrayContent(binaryData);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+
+            HttpResponseMessage httpResponse = await httpClient.PostAsync(url, content);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(responseContent))
+                {
+                    throw new InvalidOperationException("Response content is null or empty.");
+                }
+                var result = JsonSerializer.Deserialize<UploadBlobResponse>(responseContent);
+                return result ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+            }
+            else
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                throw new InvalidOperationException("API Request Failed");
+            }
+        }
+    }
 }
