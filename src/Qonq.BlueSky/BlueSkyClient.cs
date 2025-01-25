@@ -2,6 +2,7 @@
 using Qonq.BlueSky.Helper.Extensions;
 using Qonq.BlueSky.Helper.Strings;
 using Qonq.BlueSky.Model;
+using System;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -322,7 +323,7 @@ namespace Qonq.BlueSky
         }
 
         /// <summary>
-        /// Create a new Post
+        /// Create a new Post without an image
         /// </summary>
         /// <param name="text">The text of the post</param>
         /// <returns>CreateRecordResponse</returns>
@@ -330,6 +331,95 @@ namespace Qonq.BlueSky
         public async Task<CreateRecordResponse> CreatePostAsync(string text)
 		{
 			return	 await CreatePostAsync(text);
+
+        }
+
+        /// <summary>
+        /// Create a new Post
+        /// </summary>
+        /// <param name="text">The text of the post</param>
+        /// <param name="images">Array of Base64 image string and Alt text image</param>
+        /// <returns>CreateRecordResponse</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<CreateRecordResponse> CreatePostAsync(string text, (string, string?)[]? images)
+        {
+			if(images!=null && images.Length> 4)
+			{
+                throw new InvalidOperationException("Max 4 images are allowed");
+            }
+            if (_accessJwt == null)
+                throw new InvalidOperationException("Must have a valid JWT token");
+            if (_blueSkyHandle == null)
+                throw new InvalidOperationException("Must have a valid Handle");
+
+            string url = $"{pdsHost}/xrpc/com.atproto.repo.createRecord";
+
+            UnicodeString utf16 = new UnicodeString(text);
+
+            var facts = Facets.DetectFacets(utf16);
+            Embed embed = new Embed();
+            embed.Images = new List<Image>();
+            embed.Type = "app.bsky.embed.images";
+
+            if (images != null && images.Length>0)
+            {
+                UploadBlobResponse imageResponse;
+				Image img;
+
+                foreach (var image in images)
+				{
+                    imageResponse = await UploadBlobAsync(image.Item1);
+
+                    img = new Image
+					{
+                        alt = image.Item2 != null ? image.Item2 : "Image",
+                        image = imageResponse.blob,
+                        aspectRatio = new AspectRatio { width = 640, height = 480 }
+                    };
+                    embed.Images.Add(img);
+                }	
+
+            }
+            CreateRecordRequest createRecordRequest = new CreateRecordRequest
+            {
+                Repo = _did,
+                Collection = feedPost,
+                Record = new RecordValue
+                {
+                    Text = text,
+                    CreatedAt = DateTime.UtcNow.toISOstring(),
+                    Type = feedPost,
+                    Facets = facts,
+                    Embed = embed
+
+                }
+            };
+            string jsonPayload = JsonSerializer.Serialize(createRecordRequest, new JsonSerializerOptions
+            {
+                WriteIndented = true // Optional, for pretty printing
+            });
+
+            using HttpClient httpClient = new();
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage httpResponse = await httpClient.PostAsync(url, content);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(responseContent))
+                {
+                    throw new InvalidOperationException("Response content is null or empty.");
+                }
+                var result = JsonSerializer.Deserialize<CreateRecordResponse>(responseContent);
+                return result ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+            }
+            else
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                throw new InvalidOperationException("API Request Failed");
+            }
 
         }
 
@@ -358,7 +448,7 @@ namespace Qonq.BlueSky
 			Embed embed = new Embed();
 			embed.Images = new List<Image>();
 			embed.Type = "app.bsky.embed.images";
-			
+
             if (!string.IsNullOrEmpty(image))
 			{
 				 imageResponse = await UploadBlobAsync(image);
@@ -414,13 +504,103 @@ namespace Qonq.BlueSky
             }
         }
 
-		/// <summary>
-		/// Create a new session
-		/// </summary>
-		/// <param name="request">CreateSessionRequest</param>
-		/// <returns>CreateSessionResponse</returns>
-		/// <exception cref="InvalidOperationException"></exception>
-		public async Task<CreateSessionResponse> CreateSessionAsync(CreateSessionRequest request)
+        /// <summary>
+        /// Create a new Post with Website card embeds
+        /// </summary>
+        /// <param name="text">The text of the post</param>
+        /// <param name="image">Base64 string</param>
+        /// <param name="uri">External Uri</param>
+        /// <param name="title">Title of the Website card</param
+        /// <param name="description">Description of the Website card</param>
+        /// <returns>CreateRecordResponse</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<CreateRecordResponse> CreatePostExternalAsync(string text, string image, string uri, string title, string description)
+        {
+            if (_accessJwt == null)
+                throw new InvalidOperationException("Must have a valid JWT token");
+            if (_blueSkyHandle == null)
+                throw new InvalidOperationException("Must have a valid Handle");
+
+            string url = $"{pdsHost}/xrpc/com.atproto.repo.createRecord";
+
+            UnicodeString utf16 = new UnicodeString(text);
+
+            var facts = Facets.DetectFacets(utf16);
+
+            UploadBlobResponse imageResponse;
+
+            Embed embed = new Embed();
+            embed.Type = "app.bsky.embed.external";
+
+            embed.External =
+                new External
+                {
+                    Uri = uri,// "https://github.com",
+                    Title = title,// "GitHub",
+                    Description = description//"GitHub is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers."
+                };
+        
+            if (!string.IsNullOrEmpty(image))
+            {
+                imageResponse = await UploadBlobAsync(image);
+                embed.External.Thumb = new Thumb
+                {
+                    type = "blob",
+                    @ref = new Ref { link = imageResponse.blob.@ref.link },
+                    MimeType = imageResponse.blob.mimeType,
+                    Size = imageResponse.blob.size
+                };
+            }
+
+            CreateRecordRequest createRecordRequest = new CreateRecordRequest
+            {
+                Repo = _did,
+                Collection = feedPost,
+                Record = new RecordValue
+                {
+                    Text = text,
+                    CreatedAt = DateTime.UtcNow.toISOstring(),
+                    Type = feedPost,
+                    Facets = facts,
+                    Embed = embed
+
+                }
+            };
+            string jsonPayload = JsonSerializer.Serialize(createRecordRequest, new JsonSerializerOptions
+            {
+                WriteIndented = true // Optional, for pretty printing
+            });
+
+            using HttpClient httpClient = new();
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage httpResponse = await httpClient.PostAsync(url, content);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(responseContent))
+                {
+                    throw new InvalidOperationException("Response content is null or empty.");
+                }
+                var result = JsonSerializer.Deserialize<CreateRecordResponse>(responseContent);
+                return result ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+            }
+            else
+            {
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                throw new InvalidOperationException("API Request Failed");
+            }
+        }
+
+        /// <summary>
+        /// Create a new session
+        /// </summary>
+        /// <param name="request">CreateSessionRequest</param>
+        /// <returns>CreateSessionResponse</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<CreateSessionResponse> CreateSessionAsync(CreateSessionRequest request)
 		{
 			string url = $"{pdsHost}/xrpc/com.atproto.server.createSession";
 

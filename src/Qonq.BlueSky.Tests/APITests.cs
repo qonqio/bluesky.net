@@ -115,6 +115,40 @@ public class APITests
     }
 
     [Fact]
+    public async Task PostSomethingWithImages()
+    {
+        var sessionRequest = new CreateSessionRequest()
+        {
+            Identifier = _handle,
+            Password = _password
+        };
+
+        var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
+
+        Assert.NotNull(sessionResponse);
+        Assert.NotNull(sessionResponse.AccessJwt);
+        Assert.NotEmpty(sessionResponse.AccessJwt);
+
+        var text = "Image, Image, Boop! https://github.com";
+        (string, string?)[]  images = new (string, string?)[] { 
+            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 1"),
+            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 2"),
+            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 3"),
+            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 4")
+        };
+
+        var postResponse = await _client.CreatePostAsync(text, images);
+
+        Assert.NotNull(postResponse);
+
+        Assert.NotNull(postResponse.Uri);
+        Assert.NotEmpty(postResponse.Uri);
+
+        Assert.NotNull(postResponse.Cid);
+        Assert.NotEmpty(postResponse.Cid);
+    }
+
+    [Fact]
 	public async Task GetFollowers()
 	{
 		var sessionRequest = new CreateSessionRequest()
