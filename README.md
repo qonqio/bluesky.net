@@ -96,10 +96,32 @@ Console.WriteLine($"Post CID: {postResponse.Cid}");
 
 ---
 
+### **5. Posting Content with image**
+Once authenticated, you can post text content using the `CreatePostAsync` method:
+```csharp
+var postContent = "Beep, Beep, Boop! I'm a BlueSky.NET Bot!";
+var image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==";
+var altText = "Image Alt Text";
+var postResponse = await client.CreatePostAsync(postContent,image,altText);
+
+Console.WriteLine($"Post URI: {postResponse.Uri}");
+Console.WriteLine($"Post CID: {postResponse.Cid}");
+```
+
+**Validation:**
+- The `Uri` and `Cid` fields should be non-null and non-empty.
+
+---
+
 ## **Features**
 - **DID Retrieval:** Fetch your unique identifier.
 - **Session Management:** Authenticate using your handle and password.
-- **Content Posting:** Post text updates to BlueSky seamlessly.
+- **Content Posting:** Post text updates to BlueSky seamlessly. With Facets, Embeded Image and webcard support
+- **Get User By Handle**
+- **Follow Users**
+- **Unfollow Users**
+- **Get Users an Account Is Following**
+- **Get Users Following an Account**
 
 ---
 
@@ -107,7 +129,7 @@ Console.WriteLine($"Post CID: {postResponse.Cid}");
 
 Feel free to contribute to the `BlueSky.NET` library by submitting pull requests or reporting issues.
 
-**Repository:** [BlueSky.NET GitHub](https://github.com/qonqio/bluesky.net)
+**Repository:** [BlueSky.NET GitHub](https://github.com/JohanMolenaars/bluesky.net)
 
 ---
 
