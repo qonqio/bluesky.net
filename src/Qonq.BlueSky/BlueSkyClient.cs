@@ -2,20 +2,23 @@
 using Qonq.BlueSky.Helper.Extensions;
 using Qonq.BlueSky.Helper.Strings;
 using Qonq.BlueSky.Model;
-using System;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
 namespace Qonq.BlueSky
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="pdsHost"></param>
 	public class BlueSkyClient(string pdsHost)
 	{
         private const string feedPost = "app.bsky.feed.post";
 
-        private string _blueSkyHandle;
-		private string _accessJwt;
-		private string _did;
+        private string? _blueSkyHandle;
+		private string? _accessJwt;
+		private string? _did;
 
 		/// <summary>
 		/// Get a BlueSky User by handle
@@ -64,7 +67,7 @@ namespace Qonq.BlueSky
 				Record = new RecordValue
 				{
 					Subject = userDid,
-					CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+					CreatedAt = DateTime.UtcNow.toISOstring(),
 				}
 			};
 
@@ -660,9 +663,7 @@ namespace Qonq.BlueSky
 
 
             using HttpClient httpClient = new();
-            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
-            //httpClient.DefaultRequestHeaders.Add("Content-Type", "image/png");
-           
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");          
 
 
             var content = new ByteArrayContent(binaryData);
