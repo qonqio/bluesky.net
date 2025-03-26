@@ -40,9 +40,18 @@ namespace Qonq.BlueSky
 
             string url = $"{pdsHost}/xrpc/app.bsky.actor.getProfile?actor={handle}";
 
-            var response = await httpClient.GetFromJsonAsync<BlueSkyUser>(url);
+            BlueSkyUser blueSkyUser = null;
 
-            return response;
+            try
+            {
+                blueSkyUser = await httpClient.GetFromJsonAsync<BlueSkyUser>(url);
+            } 
+            catch(Exception ex)
+            {
+
+            }
+
+            return blueSkyUser;
         }
 
 		/// <summary>
