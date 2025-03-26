@@ -40,9 +40,18 @@ namespace Qonq.BlueSky
 
             string url = $"{pdsHost}/xrpc/app.bsky.actor.getProfile?actor={handle}";
 
-            var response = await httpClient.GetFromJsonAsync<BlueSkyUser>(url);
+            BlueSkyUser blueSkyUser = null;
 
-            return response;
+            try
+            {
+                blueSkyUser = await httpClient.GetFromJsonAsync<BlueSkyUser>(url);
+            } 
+            catch(Exception ex)
+            {
+
+            }
+
+            return blueSkyUser;
         }
 
 		/// <summary>
@@ -333,8 +342,52 @@ namespace Qonq.BlueSky
         /// <exception cref="InvalidOperationException"></exception>
         public async Task<CreateRecordResponse> CreatePostAsync(string text)
 		{
-			return	 await CreatePostAsync(text);
+            if (_accessJwt == null)
+                throw new InvalidOperationException("Must have a valid JWT token");
+            if (_blueSkyHandle == null)
+                throw new InvalidOperationException("Must have a valid Handle");
 
+            string url = $"{pdsHost}/xrpc/com.atproto.repo.createRecord";
+
+            var createRecordRequest = new CreateRecordRequest
+            {
+                Repo = _did,
+                Collection = "app.bsky.feed.post",
+                Record = new RecordValue
+                {
+                    Text = text,
+                    CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    Type = "app.bsky.feed.post"
+                }
+            };
+            string jsonPayload = JsonSerializer.Serialize(createRecordRequest, new JsonSerializerOptions
+            {
+                WriteIndented = true // Optional, for pretty printing
+            });
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage httpResponse = await httpClient.PostAsync(url, content);
+
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        throw new InvalidOperationException("Response content is null or empty.");
+                    }
+                    var result = JsonSerializer.Deserialize<CreateRecordResponse>(responseContent);
+                    return result ?? throw new InvalidOperationException("Deserialization returned null. Invalid response data.");
+                }
+                else
+                {
+                    var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException("API Request Failed");
+                }
+            }
         }
 
         /// <summary>

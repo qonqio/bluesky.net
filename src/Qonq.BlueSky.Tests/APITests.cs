@@ -255,8 +255,10 @@ public class APITests
             Identifier = _handle,
             Password = _password
         };
+        var kevinBacon = "realkevinbacon.bsky.social";
+        var blueSkySocial = "bsky.app";
         var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
-        var userToFollow = await _client.GetUserAsync("realkevinbacon.bsky.social");
+        var userToFollow = await _client.GetUserAsync(blueSkySocial);
         var userToFollowDid = userToFollow.Did;
         Assert.NotNull(sessionResponse);
         Assert.NotNull(sessionResponse.AccessJwt);
