@@ -397,9 +397,9 @@ namespace Qonq.BlueSky
         /// <param name="images">Array of Base64 image string and Alt text image</param>
         /// <returns>CreateRecordResponse</returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<CreateRecordResponse> CreatePostAsync(string text, (string, string?)[]? images)
+        public async Task<CreateRecordResponse> CreatePostAsync(string text, IEnumerable<ImageContent> images)
         {
-			if(images!=null && images.Length> 4)
+			if(images!=null && images.Count() > 4)
 			{
                 throw new InvalidOperationException("Max 4 images are allowed");
             }
@@ -417,24 +417,17 @@ namespace Qonq.BlueSky
             embed.Images = new List<Image>();
             embed.Type = "app.bsky.embed.images";
 
-            if (images != null && images.Length>0)
+            foreach (var image in images)
             {
-                UploadBlobResponse imageResponse;
-				Image img;
+                var imageResponse = await UploadBlobAsync(image);
 
-                foreach (var image in images)
-				{
-                    imageResponse = await UploadBlobAsync(image.Item1);
-
-                    img = new Image
-					{
-                        alt = image.Item2 != null ? image.Item2 : "Image",
-                        image = imageResponse.blob,
-                        aspectRatio = new AspectRatio { width = 640, height = 480 }
-                    };
-                    embed.Images.Add(img);
-                }	
-
+                var img = new Image
+                {
+                    alt = image.AlternativeText != null ? image.AlternativeText : "Image",
+                    image = imageResponse.blob,
+                    aspectRatio = new AspectRatio { width = 640, height = 480 }
+                };
+                embed.Images.Add(img);
             }
             CreateRecordRequest createRecordRequest = new CreateRecordRequest
             {
@@ -487,7 +480,7 @@ namespace Qonq.BlueSky
 		/// <param name="alt">alt text of image</param>
         /// <returns>CreateRecordResponse</returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<CreateRecordResponse> CreatePostAsync(string text, string? image, string? alt)
+        public async Task<CreateRecordResponse> CreatePostAsync(string text, ImageContent imageContent, string? alt)
 		{
 			if (_accessJwt == null)
 				throw new InvalidOperationException("Must have a valid JWT token");
@@ -500,23 +493,19 @@ namespace Qonq.BlueSky
 			
             var facts =Facets.DetectFacets(utf16);
 
-			UploadBlobResponse imageResponse;
 			Embed embed = new Embed();
 			embed.Images = new List<Image>();
 			embed.Type = "app.bsky.embed.images";
 
-            if (!string.IsNullOrEmpty(image))
-			{
-				 imageResponse = await UploadBlobAsync(image);
+			var imageResponse = await UploadBlobAsync(imageContent);
 
-				Image img = new Image
-				{
-					alt = alt != null ? alt : "Image",
-					image = imageResponse.blob,
-					aspectRatio = new AspectRatio { width = 640, height = 480 }
-				};
-                embed.Images.Add(img);
-            }
+			Image img = new Image
+			{
+				alt = alt != null ? alt : "Image",
+				image = imageResponse.blob,
+				aspectRatio = new AspectRatio { width = 640, height = 480 }
+			};
+            embed.Images.Add(img);
 
             CreateRecordRequest createRecordRequest = new CreateRecordRequest
 			{
@@ -570,7 +559,7 @@ namespace Qonq.BlueSky
         /// <param name="description">Description of the Website card</param>
         /// <returns>CreateRecordResponse</returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<CreateRecordResponse> CreatePostExternalAsync(string text, string image, string uri, string title, string description)
+        public async Task<CreateRecordResponse> CreatePostExternalAsync(string text, ImageContent image, string uri, string title, string description)
         {
             if (_accessJwt == null)
                 throw new InvalidOperationException("Must have a valid JWT token");
@@ -595,18 +584,15 @@ namespace Qonq.BlueSky
                     Title = title,// "GitHub",
                     Description = description//"GitHub is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers."
                 };
-        
-            if (!string.IsNullOrEmpty(image))
+
+            imageResponse = await UploadBlobAsync(image);
+            embed.External.Thumb = new Thumb
             {
-                imageResponse = await UploadBlobAsync(image);
-                embed.External.Thumb = new Thumb
-                {
-                    type = "blob",
-                    @ref = new Ref { link = imageResponse.blob.@ref.link },
-                    MimeType = imageResponse.blob.mimeType,
-                    Size = imageResponse.blob.size
-                };
-            }
+                type = "blob",
+                @ref = new Ref { link = imageResponse.blob.@ref.link },
+                MimeType = imageResponse.blob.mimeType,
+                Size = imageResponse.blob.size
+            };
 
             CreateRecordRequest createRecordRequest = new CreateRecordRequest
             {
@@ -701,7 +687,7 @@ namespace Qonq.BlueSky
         /// <remarks>
         ///data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg== 
         /// </remarks>
-        public async Task<UploadBlobResponse> UploadBlobAsync(string image)
+        public async Task<UploadBlobResponse> UploadBlobAsync(ImageContent imageContent)
         {
             if (_accessJwt == null)
                 throw new InvalidOperationException("Must have a valid JWT token");
@@ -710,10 +696,7 @@ namespace Qonq.BlueSky
 
             string url = $"{pdsHost}/xrpc/com.atproto.repo.uploadBlob";
 
-
-            BlobConverter blob = new BlobConverter();
-			byte[] binaryData = blob.ConvertDataURIToByteArray(image);
-
+            byte[] binaryData = Convert.FromBase64String(imageContent.Base64EncodedContent);
 
             using HttpClient httpClient = new();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessJwt}");          

@@ -31,4 +31,19 @@
     <Folder Include="Samples\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Samples\images\bluesky-anakin.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\images\bluesky-distractedboyfriend.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\images\bluesky-drake.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\images\bluesky-galaxybrain.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -85,6 +85,18 @@ public class APITests
         Assert.NotEmpty(postResponse.Cid);
     }
 
+    public static string GetBase64Image(string relativePath)
+    {
+        // Resolve the full path
+        string fullPath = Path.Combine(AppContext.BaseDirectory, relativePath);
+
+        // Read the bytes and convert to Base64
+        byte[] imageBytes = File.ReadAllBytes(fullPath);
+        string base64String = Convert.ToBase64String(imageBytes);
+
+        return base64String;
+    }
+
 
     [Fact]
     public async Task PostSomethingWithImage()
@@ -103,7 +115,14 @@ public class APITests
 
         var text = "Image, Image, Boop!";
 
-        var postResponse = await _client.CreatePostAsync(text, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Test");
+        var imageContents = GetBase64Image("./Samples/images/bluesky-anakin.jpg");
+        var image1 = new ImageContent()
+        {
+            Base64EncodedContent = imageContents,
+            MimeType = "image/jpg"
+        };
+
+        var postResponse = await _client.CreatePostAsync(text, image1, "Test");
 
         Assert.NotNull(postResponse);
 
@@ -130,14 +149,39 @@ public class APITests
         Assert.NotEmpty(sessionResponse.AccessJwt);
 
         var text = "Image, Image, Boop! https://github.com";
-        (string, string?)[]  images = new (string, string?)[] { 
-            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 1"),
-            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 2"),
-            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 3"),
-            ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==", "Image 4")
+
+        var image1 = new ImageContent()
+        {
+            AlternativeText = "Anakin Likes to Test in Production",
+            Base64EncodedContent = GetBase64Image("./Samples/images/bluesky-anakin.jpg"),
+            MimeType = "image/jpg"
+        };
+        var image2 = new ImageContent()
+        {
+            AlternativeText = "Testing in Production...Just more Fun",
+            Base64EncodedContent = GetBase64Image("./Samples/images/bluesky-distractedboyfriend.jpg"),
+            MimeType = "image/jpg"
+        };
+        var image3 = new ImageContent()
+        {
+            AlternativeText = "Drake Likes Testing in Production",
+            Base64EncodedContent = GetBase64Image("./Samples/images/bluesky-drake.jpg"),
+            MimeType = "image/jpg"
+        };
+        var image4 = new ImageContent()
+        {
+            AlternativeText = "Real Developers Test in Production",
+            Base64EncodedContent = GetBase64Image("./Samples/images/bluesky-galaxybrain.jpg"),
+            MimeType = "image/jpg"
         };
 
-        var postResponse = await _client.CreatePostAsync(text, images);
+        var imageList = new List<ImageContent>();
+        imageList.Add(image1);
+        imageList.Add(image2);
+        imageList.Add(image3);
+        imageList.Add(image4);
+
+        var postResponse = await _client.CreatePostAsync(text, imageList);
 
         Assert.NotNull(postResponse);
 
@@ -242,8 +286,14 @@ public class APITests
         Assert.NotNull(sessionResponse);
         Assert.NotNull(sessionResponse.AccessJwt);
         Assert.NotEmpty(sessionResponse.AccessJwt);
-        var imageBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==";
-        var allFollowRecords = await _client.UploadBlobAsync(imageBase64);
+
+        var image1 = new ImageContent()
+        {
+            AlternativeText = "Image 1",
+            Base64EncodedContent = GetBase64Image("./Samples/images/bluesky-anakin.jpg"),
+            MimeType = "image/jpg"
+        };
+        var allFollowRecords = await _client.UploadBlobAsync(image1);
         Assert.NotNull(allFollowRecords);
     }
 
