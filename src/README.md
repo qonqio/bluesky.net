@@ -122,6 +122,22 @@ Console.WriteLine($"Post CID: {postResponse.Cid}");
 
 ---
 
+### **5. Posting Content with hashtags**
+Once authenticated, you can post text content using the `CreatePostAsync` method:
+```csharp
+var postContent = "Beep, Beep, Boop! I'm a BlueSky.NET Bot! #HashTag";
+
+var postResponse = await client.CreatePostAsync(postContent);
+
+Console.WriteLine($"Post URI: {postResponse.Uri}");
+Console.WriteLine($"Post CID: {postResponse.Cid}");
+```
+
+**Validation:**
+- The `Uri` and `Cid` fields should be non-null and non-empty.
+
+---
+
 ## **Features**
 - **DID Retrieval:** Fetch your unique identifier.
 - **Session Management:** Authenticate using your handle and password.

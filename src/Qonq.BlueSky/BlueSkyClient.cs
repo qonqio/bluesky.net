@@ -349,6 +349,10 @@ namespace Qonq.BlueSky
 
             string url = $"{pdsHost}/xrpc/com.atproto.repo.createRecord";
 
+            UnicodeString utf16 = new UnicodeString(text);
+
+            var facts = Facets.DetectFacets(utf16);
+
             var createRecordRequest = new CreateRecordRequest
             {
                 Repo = _did,
@@ -357,6 +361,7 @@ namespace Qonq.BlueSky
                 {
                     Text = text,
                     CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    Facets = facts,
                     Type = "app.bsky.feed.post"
                 }
             };

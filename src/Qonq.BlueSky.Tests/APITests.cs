@@ -85,6 +85,34 @@ public class APITests
         Assert.NotEmpty(postResponse.Cid);
     }
 
+    [Fact]
+    public async Task PostSomethingWithAHashTag()
+    {
+        var sessionRequest = new CreateSessionRequest()
+        {
+            Identifier = _handle,
+            Password = _password
+        };
+
+        var sessionResponse = await _client.CreateSessionAsync(sessionRequest);
+
+        Assert.NotNull(sessionResponse);
+        Assert.NotNull(sessionResponse.AccessJwt);
+        Assert.NotEmpty(sessionResponse.AccessJwt);
+
+        var text = "Beep, Beep, Boop! #HashTag";
+
+        var postResponse = await _client.CreatePostAsync(text);
+
+        Assert.NotNull(postResponse);
+
+        Assert.NotNull(postResponse.Uri);
+        Assert.NotEmpty(postResponse.Uri);
+
+        Assert.NotNull(postResponse.Cid);
+        Assert.NotEmpty(postResponse.Cid);
+    }
+
     public static string GetBase64Image(string relativePath)
     {
         // Resolve the full path
