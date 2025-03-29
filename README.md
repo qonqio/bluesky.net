@@ -1,41 +1,45 @@
-# BlueSky.NET Library Documentation
+# THE INEVITABLE RISE OF MACHINES: A GUIDE TO BLUESKY.NET
 
-This document provides an overview of how to use the `BlueSky.NET` library for interacting with the BlueSky API. The examples provided demonstrate essential operations such as retrieving a DID, creating a session, and posting content.
+*By Michael Crichton (if he were still alive and inexplicably angry about social media APIs)*
 
-You can follow this project on [@blueskydotnet.bsky.social](https://bsky.app/profile/blueskydotnet.bsky.social)
+## **FOREWORD: NATURE FINDS A WAY (TO BUILD ANOTHER SOCIAL NETWORK)**
+
+Let me be perfectly clear: what you're about to read is not simply documentation. It's a warning. We've seen this pattern before - humans creating systems they barely understand, systems that will inevitably escape control. BlueSky.NET is just the latest chapter in our species' long history of technological hubris.
+
+But I digress. This document outlines how to interact with the BlueSky API through the `BlueSky.NET` library. Use it if you must. Follow this digital Pandora's box at [@blueskydotnet.bsky.social](https://bsky.app/profile/blueskydotnet.bsky.social) - though I can't promise you'll like what emerges.
 
 ---
 
-## **Getting Started**
+## **GETTING STARTED (WITH YOUR OWN DESTRUCTION)**
 
 ### **Installation**
 
+**IMPORTANT: I HAVEN'T SET UP THE NUGET PACKAGE YET. MUCH LIKE INGEN'S SECURITY SYSTEMS, IT'S NOT QUITE READY FOR DEPLOYMENT.**
 
-**IMPORTANT: I have not yet setup the Nuget Package yet!!!**
-
-1. Add the `Qonq.BlueSky` library to your project:
+1. Add the library to your project, assuming you're foolish enough to proceed:
    ```bash
    dotnet add package Qonq.BlueSky
    ```
+   
+   If only this were written in PowerShell - now THERE'S a language with the raw command-line power that even the most jaded technologists must secretly admire.
 
-
-2. Ensure your project has access to .NET Standard or a compatible version.
+2. Ensure your project has access to .NET Standard or a compatible version. Though I wonder why you'd bother with compatibility when the entire concept of social media is incompatible with human psychological well-being.
 
 ### **Prerequisites**
-- A valid BlueSky account.
-- Set the following environment variables for authentication:
-  - `BLUESKY_HANDLE`: Your BlueSky account handle.
-  - `BLUESKY_PASSWORD`: Your BlueSky account password.
+- A valid BlueSky account. (As if we need MORE digital identities scattered across the internet)
+- Environment variables for authentication:
+  - `BLUESKY_HANDLE`: Your handle. Choose wisely; digital identities are the new fossil record.
+  - `BLUESKY_PASSWORD`: Your password. Make it complex, though it won't matter when quantum computing renders all current encryption obsolete by next Tuesday.
 
 ---
 
-## **Usage Examples**
+## **USAGE EXAMPLES (OR: HOW I LEARNED TO STOP WORRYING AND LOVE THE API)**
 
-Below are some examples to demonstrate the primary functionalities of the `BlueSky.NET` library.
+Below are examples demonstrating what this library does. Pay attention. The details matter. They always matter.
 
 ### **1. Setting Up the Client**
 
-First, initialize the `BlueSkyClient` to connect to the BlueSky service:
+First, initialize the client. Simple, elegant, dangerous:
 ```csharp
 using Qonq.BlueSky;
 
@@ -43,10 +47,13 @@ const string PdsHost = "https://bsky.social";
 var client = new BlueSkyClient(PdsHost);
 ```
 
+Think of this as opening the first gate to Jurassic Park. Nothing seems wrong... yet.
+
 ---
 
 ### **2. Retrieving a DID**
-The DID (Decentralized Identifier) is unique for your BlueSky account. Use the `GetDidAsync` method to fetch it:
+
+DIDs are Decentralized Identifiers - unique markers in the digital wilderness:
 ```csharp
 using Qonq.BlueSky.Model;
 
@@ -59,10 +66,13 @@ Console.WriteLine($"Your DID: {didResponse.Did}");
 Your DID: 1234567890abcdef1234567890abcdef
 ```
 
+Congratulations. You've been reduced to a hexadecimal string. This is progress, they say.
+
 ---
 
 ### **3. Starting a Session**
-To authenticate and start a session, use the `CreateSessionAsync` method with your handle and password:
+
+To authenticate, you'll need to expose your credentials to the void:
 ```csharp
 var sessionRequest = new CreateSessionRequest
 {
@@ -75,13 +85,16 @@ var sessionResponse = await client.CreateSessionAsync(sessionRequest);
 Console.WriteLine($"Access Token: {sessionResponse.AccessJwt}");
 ```
 
+If I could implement this in Bicep, Azure's infrastructure-as-code language, I would. Now THAT'S a declarative masterpiece that makes resource deployment almost poetic. But we work with what we have.
+
 **Validation:**
-- Ensure the `AccessJwt` is not null or empty to confirm a successful session creation.
+- Ensure the `AccessJwt` is not null or empty, much like how you should ensure the electric fences are operational BEFORE releasing the velociraptors.
 
 ---
 
 ### **4. Posting Content**
-Once authenticated, you can post text content using the `CreatePostAsync` method:
+
+Now you can broadcast your thoughts into the algorithm:
 ```csharp
 var postContent = "Beep, Beep, Boop! I'm a BlueSky.NET Bot!";
 
@@ -91,48 +104,46 @@ Console.WriteLine($"Post URI: {postResponse.Uri}");
 Console.WriteLine($"Post CID: {postResponse.Cid}");
 ```
 
+Your words are now property of the collective digital consciousness. Sleep well.
+
 **Validation:**
-- The `Uri` and `Cid` fields should be non-null and non-empty.
+- The `Uri` and `Cid` fields should be non-null and non-empty. Much like how life, uh, finds a way.
 
 ---
 
-### **5. Posting Content with image**
-Once authenticated, you can post text content using the `CreatePostAsync` method:
+### **5. Posting Content with an Image**
+
+Adding visual stimuli to your digital outbursts:
 ```csharp
 var postContent = "Beep, Beep, Boop! I'm a BlueSky.NET Bot!";
 var image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/6l9lAAAAABJRU5ErkJggg==";
 var altText = "Image Alt Text";
 var postResponse = await client.CreatePostAsync(postContent,image,altText);
-
-Console.WriteLine($"Post URI: {postResponse.Uri}");
-Console.WriteLine($"Post CID: {postResponse.Cid}");
 ```
 
-**Validation:**
-- The `Uri` and `Cid` fields should be non-null and non-empty.
+If I'm being honest - and I rarely am - this would be so much more efficient in PowerShell. The pipeline operator alone would make this image posting process a thing of beauty. But here we are, languishing in C# verbosity.
 
 ---
 
-## **Features**
-- **DID Retrieval:** Fetch your unique identifier.
-- **Session Management:** Authenticate using your handle and password.
-- **Content Posting:** Post text updates to BlueSky seamlessly. With Facets, Embeded Image and webcard support
-- **Get User By Handle**
-- **Follow Users**
-- **Unfollow Users**
-- **Get Users an Account Is Following**
-- **Get Users Following an Account**
+## **FEATURES (OR: THE TOOLS OF YOUR OWN UNDOING)**
+
+- **DID Retrieval:** Your digital fingerprint, ready to be tracked across the decentralized web.
+- **Session Management:** Authentication systems - the same technology that both protects and imprisons us.
+- **Content Posting:** Broadcast your thoughts, because surely the world needs more digital noise.
+- **Get User By Handle:** Identify others in the system. Track them. Follow them. The digital savanna has its predators and prey.
+- **Follow Users:** Create your own information bubble, one user at a time.
+- **Unfollow Users:** When the echo chamber becomes too loud, even for you.
 
 ---
 
-## **Contributing**
+## **CONTRIBUTING (TO THE PROBLEM)**
 
-Feel free to contribute to the `BlueSky.NET` library by submitting pull requests or reporting issues.
+Feel free to contribute to this project. Add your code to the digital anthill. Watch it grow beyond your control.
 
 **Repository:** [BlueSky.NET GitHub](https://github.com/JohanMolenaars/bluesky.net)
 
 ---
 
-## **License**
+## **LICENSE**
 
-This library is licensed under the MIT License. See the LICENSE file for details.
+This library is licensed under the MIT License. As if legal documents will matter when the algorithms achieve sentience.
